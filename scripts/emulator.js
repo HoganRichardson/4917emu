@@ -9,7 +9,7 @@
 var emu_data = null;
 
 async function getJson() {
-    const response = await fetch('/config/4917.json', {});
+    const response = await fetch('./config/4917.json', {});
     const json = await response.json();
 
     return json;
@@ -92,6 +92,12 @@ buttonStep.addEventListener("click", (event) => {
 });
 
 buttonSave.addEventListener("click", (event) => {
+    // Get all memory values as array
+    var memory_export = [];
+    for (let i = 0; i < emu_data.memSize; i++) {
+       memory_export.push(getMemory(i)); 
+    }
+
 });
 
 buttonLoad.addEventListener("click", (event) => {
