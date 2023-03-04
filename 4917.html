@@ -25,11 +25,18 @@
   </div>
   <!-- CPU State -->
   <div class="container mb-3">
-    <ul class="list-group list-group-horizontal">
-      <li class="list-group-item">Fetch</li>
-      <li class="list-group-item">Increment</li>
-      <li class="list-group-item">Execute</li>
-    </ul>
+    <div class="row">
+      <div class="col">
+        <ul class="list-group list-group-horizontal">
+          <li id="indicator-fetch" class="list-group-item list-group-item-danger">Fetch</li>
+          <li id="indicator-incr" class="list-group-item">Increment</li>
+          <li id="indicator-exec" class="list-group-item">Execute</li>
+        </ul>
+      </div>
+      <div class="col">
+        <button id="bell" class="invisible btn btn-warning" type="button" disabled>🔔</button>
+      </div>
+    </div>
   </div>
   <!-- Microprocessor Grid -->
   <div id="mp-grid" class="container mb-3">
@@ -111,22 +118,31 @@
   </div>
   <!-- Load/Save Buttons -->
   <div class="container mb-3">
-    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-      <button id="button-load" class="btn btn-outline-secondary me-md-2" type="button">Load</button>
-      <button id="button-save" class="btn btn-outline-primary" type="button">Save</button>
+    <div class="row g-3">
+      <div class="col-sm-7">
+        <div class="input-group">
+          <input id="file-load" class="form-control" type="file" accept="application/json" />
+          <button id="button-load" class="btn btn-outline-secondary me-md-2" type="button" disabled>Load</button>
+        </div>
+      </div>
+      <div class="col-sm">
+        <button id="button-save" class="btn btn-outline-primary" type="button">Save</button>
+      </div>
     </div>
   </div>
   <!-- Printer -->
   <div class="container mb-3">
     <div class="row">
       <h5>Printer</h5>
-      <textarea id="printer" type="text" disabled></textarea>
+      <div class="form">
+        <textarea class="form-control" id="printer" type="text" disabled></textarea>
+      </div>
     </div>
   </div>
   <!-- Registers Table -->
   <div class="container mb-3">
     <div class="row">
-      <div class="col">
+      <div class="col-md-4">
         <h5>System Registers</h5>
         <table id="sys-registers" class="table table-light table-bordered">
         </table>
@@ -139,10 +155,18 @@
       </table>
     </div>
   </div>
+  <!-- Instructions Tables -->
   <div class="container mb-3">
-    <div class="col-md-4">
+    <div class="col-md-8">
       <h5>Instructions</h5>
-      <table id="instructions" class="table">
+      <table id="1binstructions" class="table">
+      </table>
+    </div>
+  </div>
+  <div class="container mb-3">
+    <div class="col-md-8">
+      <h5>2-byte Instructions</h5>
+      <table id="2binstructions" class="table">
       </table>
     </div>
   </div>

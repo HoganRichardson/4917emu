@@ -111,16 +111,25 @@
   </div>
   <!-- Load/Save Buttons -->
   <div class="container mb-3">
-    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-      <button id="button-load" class="btn btn-outline-secondary me-md-2" type="button">Load</button>
-      <button id="button-save" class="btn btn-outline-primary" type="button">Save</button>
+    <div class="row g-3">
+      <div class="col-sm-7">
+        <div class="input-group">
+          <input id="file-load" class="form-control" type="file" accept="application/json" />
+          <button id="button-load" class="btn btn-outline-secondary me-md-2" type="button" disabled>Load</button>
+        </div>
+      </div>
+      <div class="col-sm">
+        <button id="button-save" class="btn btn-outline-primary" type="button">Save</button>
+      </div>
     </div>
   </div>
   <!-- Printer -->
   <div class="container mb-3">
     <div class="row">
       <h5>Printer</h5>
-      <textarea id="printer" type="text" disabled></textarea>
+      <div class="form">
+        <textarea class="form-control" id="printer" type="text" disabled></textarea>
+      </div>
     </div>
   </div>
   <!-- Registers Table -->
@@ -152,9 +161,9 @@
     </div>
   </div>
   <div class="container mb-3">
-    <div class="col">
+    <div class="col-md-8">
       <h5>Instructions</h5>
-      <table id="instructions" class="table">
+      <table id="1binstructions" class="table">
         <tr>
           <td>0</td>
           <td><code>Halt</code></td>
@@ -185,6 +194,9 @@
           <td>Halt</td>
           <td>Stop the Program</td>
         </tr>
+      </table>
+      <h5>2-byte Instructions</h5>
+      <table id="2binstructions" class="table">
       </table>
     </div>
   </div>

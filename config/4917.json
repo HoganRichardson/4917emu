@@ -4,22 +4,24 @@
     "bits": 16, 
     "sysRegisters": [ "IP", "IS" ],
     "gpRegisters": [ "R0", "R1" ],
-    "instructions": [
+    "instructions1B": [
         [ 0, "Halt",            "Stop the Program" ],
         [ 1, "R0 = R0 + R1",    "Add" ],
         [ 2, "R0 = R0 - R1",    "Subtract" ],
         [ 3, "R0 = R0 + 1",     "Increment R0" ],
         [ 4, "R1 = R1 + 1",     "Increment R1" ],
         [ 5, "R0 = R0 - 1",     "Decrement R0" ],
-        [ 6, "R1 = R1 - 1",     "Decremtn R1" ],
-        [ 7, "Ring Bell",       "Ding!" ],
-        [ 8, "Print <data>",            "Prints numerical value for <data>" ],
-        [ 9, "Load <data> into R0",     "Loads value at address <data> into R0" ],
-        [ 10, "Load <data> into R1",    "Loads value at address <data> into R1" ],
-        [ 11, "Store R0 at <data>",     "Stores R0 value at address <data>" ],
-        [ 12, "Store R1 at <data>",     "Stores R1 value at address <data>" ],
-        [ 13, "Jump to <data>",         "Set IP to <data>" ],
-        [ 14, "Jump to <data> if 0",     "Only jump to <data> if R0 == 0" ],
-        [ 15, "Jump to <data> if !0",    "Only jump to <data> if R0 != 0" ]
+        [ 6, "R1 = R1 - 1",     "Decrement R1" ],
+        [ 7, "Ring Bell",       "Ding!" ]
+    ],
+    "instructions2B": [
+        [ 8, "Print 'data'",            "Prints numerical value for 'data'" ],
+        [ 9, "Load 'data' into R0",     "Loads value at address 'data' into R0" ],
+        [ 10, "Load 'data' into R1",    "Loads value at address 'data' into R1" ],
+        [ 11, "Store R0 at 'data'",     "Stores R0 value at address 'data'" ],
+        [ 12, "Store R1 at 'data'",     "Stores R1 value at address 'data'" ],
+        [ 13, "Jump to 'data'",         "Set IP to 'data'" ],
+        [ 14, "Jump to 'data' if 0",     "Only jump to 'data' if R0 == 0" ],
+        [ 15, "Jump to 'data' if !0",    "Only jump to 'data' if R0 != 0" ]
     ]
 }

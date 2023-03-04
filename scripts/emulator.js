@@ -8,15 +8,15 @@
  ****************/
 var emu_data = null;
 
-async function getJson() {
-    const response = await fetch('./config/4917.json', {});
+async function getJSONFile(file) {
+    const response = await fetch(file, {});
     const json = await response.json();
 
     return json;
 }
 
 window.addEventListener("load", (event) => {
-    getJson().then(json => {
+    getJSONFile('./config/4917.json').then(json => {
         console.log(json);
         emu_data = json;
         documentSetup();
@@ -40,8 +40,17 @@ function documentSetup() {
         newRow.innerHTML += "<td id=gpr-" + item + ">0</td>"
     })
 
-    emu_data.instructions.forEach(function (item) {
-        var newRow = document.getElementById("instructions").insertRow();
+    emu_data.instructions1B.forEach(function (item) {
+        var newRow = document.getElementById("1binstructions").insertRow();
+        var cell0 = newRow.insertCell();
+        var cell1 = newRow.insertCell();
+        var cell2 = newRow.insertCell();
+        cell0.innerHTML = item[0]
+        cell1.innerHTML = "<code>" + item[1] + "</code>"
+        cell2.innerHTML = item[2]
+    })
+    emu_data.instructions2B.forEach(function (item) {
+        var newRow = document.getElementById("2binstructions").insertRow();
         var cell0 = newRow.insertCell();
         var cell1 = newRow.insertCell();
         var cell2 = newRow.insertCell();
@@ -79,6 +88,7 @@ const buttonRun  = document.getElementById("button-run");
 const buttonStep = document.getElementById("button-step");
 const buttonSave = document.getElementById("button-save");
 const buttonLoad = document.getElementById("button-load");
+const fileInput  = document.getElementById("file-load");
 
 buttonStop.addEventListener("click", (event) => {
     changeRunState(false)
@@ -98,9 +108,30 @@ buttonSave.addEventListener("click", (event) => {
        memory_export.push(getMemory(i)); 
     }
 
+    const blob = new Blob([JSON.stringify(memory_export)], { type: 'application/json' });
+    const dl_url = URL.createObjectURL(blob);
+    download(dl_url, 'memory.json')
 });
 
 buttonLoad.addEventListener("click", (event) => {
+    const selectedFile = document.getElementById("file-load").files[0];
+    selectedFile.text().then(json => {
+        // Read json file into memory
+        console.log(json)
+        data = JSON.parse(json)
+        console.log(data)
+        for (let i = 0; i < emu_data.memSize; i++) {
+            setMemory(i, data[i])
+        }
+    })
+});
+
+fileInput.addEventListener("change", (event) => {
+    if (event.target.files.length > 0) {
+        buttonLoad.disabled = false;
+    } else {
+        buttonLoad.disabled = true;
+    }
 });
 
 /* Memory Cell Event Handlers */
@@ -113,6 +144,15 @@ Array.from(document.getElementsByTagName("input")).forEach(element => {
 /********************
  * HELPER FUNCTIONS *
  ********************/
+const download = (path, filename) => {
+    const anchor = document.createElement('a');
+    anchor.href = path;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+}
+
 function getMemory(addr) {
     memString = document.getElementById(memToId(addr)).value;
     memValue = parseInt(memString, 16);
@@ -120,7 +160,7 @@ function getMemory(addr) {
 }
 
 function setMemory(addr, value) {
-    document.getElementById(memToId(addr)).innerHTML = value.toString(16);
+    document.getElementById(memToId(addr)).value = value.toString(16).padStart(2, '0');
 }
 
 function memToId(addr) {
@@ -130,7 +170,6 @@ function memToId(addr) {
 function idToMem(id) {
     return parseInt(id.replace("mem", ""), 16);
 }
-
 
 function validateMemory(addr) {
     mem = getMemory(addr);
@@ -147,6 +186,58 @@ function validateAllMemory() {
     }
 }
 
+function ringBell() {
+    var bell = document.getElementById("bell");
+    bell.classList.remove("invisible")
+
+    setTimeout(function() {
+        console.log("timeout done");
+        bell.classList.add("invisible");
+      }, 3000); // TODO change to something that works with clock speed!
+}
+
+function writeToPrinter(text) {
+    const printer = document.getElementById("printer");
+    if (printer.value.length != 0) {
+        // Not the first line so add linebreak
+        printer.value += "\n";
+    }
+    printer.value += text;
+    printer.scrollTop = printer.scrollHeight;
+}
+
+const indicatorFetch = document.getElementById("indicator-fetch");
+const indicatorIncr = document.getElementById("indicator-incr");
+const indicatorExec = document.getElementById("indicator-exec");
+
+function updateCycleIndicator(state) {
+    switch(state) {
+        case "FETCH": 
+            indicatorFetch.classList.add("list-group-item-danger");
+            indicatorIncr.className = "list-group-item";
+            indicatorExec.className = "list-group-item";
+            break;
+        case "INCREMENT":
+            indicatorFetch.className = "list-group-item";
+            indicatorIncr.classList.add("list-group-item-warning");
+            indicatorExec.className = "list-group-item";
+            break;
+        case "EXECUTE":
+            indicatorFetch.className = "list-group-item";
+            indicatorIncr.className = "list-group-item";
+            indicatorExec.classList.add("list-group-item-success");
+            break;
+    }
+}
+
 /*************
  * EMULATOR  *
  *************/
+const cpuStates = [ "FETCH", "INCREMENT", "EXECUTE" ]
+var cpuState = 0 // index of above
+
+function cpuCycle() {
+    // Perform a step of the CPU cycle
+    cpuState = (cpuState + 1) % 3
+    updateCycleIndicator(cpuStates[cpuState])
+}
