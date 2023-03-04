@@ -1,0 +1,193 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>4001</title>
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+</head>
+
+<body>
+  <div class="container mt-4 text-center">
+    <div class="container g-4">
+      <h1>4001 Microprocessor</h1>
+    </div>
+  </div>
+  <!-- Controls -->
+  <div class="container mb-3">
+    <div class="d-grid gap-2 d-md-block">
+      <button id="button-stop" class="btn btn-danger" type="button" disabled>Stop</button>
+      <button id="button-run" class="btn btn-success" type="button">Run</button>
+      <button id="button-step" class="btn btn-secondary" type="button">Step</button>
+    </div>
+  </div>
+  <!-- CPU State -->
+  <div class="container mb-3">
+    <ul class="list-group list-group-horizontal">
+      <li class="list-group-item list-group-item-danger">Fetch</li>
+      <li class="list-group-item list-group-item-warning">Increment</li>
+      <li class="list-group-item list-group-item-success">Execute</li>
+    </ul>
+  </div>
+  <!-- Microprocessor Grid -->
+  <div id="mp-grid" class="container mb-3">
+    <div class="row">
+      <h3>Memory</h3>
+    </div>
+    <div class="row mb-3">
+      <div class="col">
+        <div class="form-text">00</div>
+        <input id="mem00" type="text" class="form-control" value="00" aria-label="00">
+      </div>
+      <div class="col">
+        <div class="form-text">01</div>
+        <input id="mem01" type="text" class="form-control" value="00" aria-label="00">
+      </div>
+      <div class="col">
+        <div class="form-text">02</div>
+        <input id="mem02" type="text" class="form-control" value="00" aria-label="00">
+      </div>
+      <div class="col">
+        <div class="form-text">03</div>
+        <input id="mem03" type="text" class="form-control" value="00" aria-label="00">
+      </div>
+    </div>
+    <div class="row mb-3">
+      <div class="col">
+        <div class="form-text">04</div>
+        <input id="mem04" type="text" class="form-control" value="00" aria-label="00">
+      </div>
+      <div class="col">
+        <div class="form-text">05</div>
+        <input id="mem05" type="text" class="form-control" value="00" aria-label="00">
+      </div>
+      <div class="col">
+        <div class="form-text">06</div>
+        <input id="mem06" type="text" class="form-control" value="00" aria-label="00">
+      </div>
+      <div class="col">
+        <div class="form-text">07</div>
+        <input id="mem07" type="text" class="form-control" value="00" aria-label="00">
+      </div>
+    </div>
+    <div class="row mb-3">
+      <div class="col">
+        <div class="form-text">08</div>
+        <input id="mem08" type="text" class="form-control" value="00" aria-label="00">
+      </div>
+      <div class="col">
+        <div class="form-text">09</div>
+        <input id="mem09" type="text" class="form-control" value="00" aria-label="00">
+      </div>
+      <div class="col">
+        <div class="form-text">0A</div>
+        <input id="mem0a" type="text" class="form-control" value="00" aria-label="00">
+      </div>
+      <div class="col">
+        <div class="form-text">0B</div>
+        <input id="mem0b" type="text" class="form-control" value="00" aria-label="00">
+      </div>
+    </div>
+    <div class="row mb-3">
+      <div class="col">
+        <div class="form-text">0C</div>
+        <input id="mem0c" type="text" class="form-control" value="00" aria-label="00">
+      </div>
+      <div class="col">
+        <div class="form-text">0D</div>
+        <input id="mem0d" type="text" class="form-control" value="00" aria-label="00">
+      </div>
+      <div class="col">
+        <div class="form-text">0E</div>
+        <input id="mem0e" type="text" class="form-control" value="00" aria-label="00">
+      </div>
+      <div class="col">
+        <div class="form-text">0F</div>
+        <input id="mem0f" type="text" class="form-control" value="00" aria-label="00">
+      </div>
+    </div>
+  </div>
+  <!-- Load/Save Buttons -->
+  <div class="container mb-3">
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+      <button id="button-load" class="btn btn-outline-secondary me-md-2" type="button">Load</button>
+      <button id="button-save" class="btn btn-outline-primary" type="button">Save</button>
+    </div>
+  </div>
+  <!-- Printer -->
+  <div class="container mb-3">
+    <div class="row">
+      <h5>Printer</h5>
+      <textarea id="printer" type="text" disabled></textarea>
+    </div>
+  </div>
+  <!-- Registers Table -->
+  <div class="container mb-3">
+    <div class="row">
+      <div class="col-md-4">
+        <h5>System Registers</h5>
+        <table id="sys-registers" class="table table-light table-bordered">
+          <tr>
+            <th>IP</th>
+            <td>0</td>
+          </tr>
+          <tr>
+            <th>IS</th>
+            <td>0</td>
+          </tr>
+        </table>
+        <p><small>IP: Instruction Pointer, IS: Instruction Store</small></p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <h5>General-purpose Registers</h5>
+      <table id="gp-registers" class="table table-bordered">
+        <tr>
+          <th>R</th>
+          <td>0</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  <div class="container mb-3">
+    <div class="col-md-4">
+      <h5>Instructions</h5>
+      <table id="instructions" class="table">
+        <tr>
+          <td>0</td>
+          <td><code>Halt</code></td>
+          <td>Stop the Program</td>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td><code>R=R+1</code></td>
+          <td>Increase R by 1</td>
+        </tr>
+        <tr>
+          <td>0</td>
+          <td>Halt</td>
+          <td>Stop the Program</td>
+        </tr>
+        <tr>
+          <td>0</td>
+          <td>Halt</td>
+          <td>Stop the Program</td>
+        </tr>
+        <tr>
+          <td>0</td>
+          <td>Halt</td>
+          <td>Stop the Program</td>
+        </tr>
+        <tr>
+          <td>0</td>
+          <td>Halt</td>
+          <td>Stop the Program</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</body>
+
+</html>
