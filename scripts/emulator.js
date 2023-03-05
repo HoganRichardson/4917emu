@@ -3,11 +3,16 @@
  *
  */
 
+var emu_data = null;
+const cpuStates = [ "FETCH", "INCREMENT", "EXECUTE" ]
+const clockDelay = 1000 // Time in ms for each CPU step
+var cpuState = 0 // index of cpuStates array
+var initialState = [] // Stores initial state of memory before execution, restored by 'reset'
+var registers = { } 
+
 /****************
  * FRONT END UI *
  ****************/
-var emu_data = null;
-
 async function getJSONFile(file) {
     const response = await fetch(file, {});
     const json = await response.json();
@@ -16,8 +21,8 @@ async function getJSONFile(file) {
 }
 
 window.addEventListener("load", (event) => {
-    getJSONFile('./config/4917.json').then(json => {
-        console.log(json);
+    configFile = "./config/" + document.title + ".json"
+    getJSONFile(configFile).then(json => {
         emu_data = json;
         documentSetup();
     })
@@ -25,19 +30,22 @@ window.addEventListener("load", (event) => {
 
 function documentSetup() {
     // Set up page
-    document.title = emu_data.name;
     document.getElementById("h1-title").innerHTML = emu_data.name + " Microprocessor";
 
     emu_data.sysRegisters.forEach(function (item) {
         var newRow = document.getElementById("sys-registers").insertRow();
         newRow.innerHTML = "<th>" + item + "</th>"
-        newRow.innerHTML += "<td id=sysr-" + item + ">0</td>"
+        newRow.innerHTML += "<td id=reg-" + item + ">0</td>"
+
+        registers[item] = 0
     })
 
     emu_data.gpRegisters.forEach(function (item) {
         var newRow = document.getElementById("gp-registers").insertRow();
         newRow.innerHTML = "<th>" + item + "</th>"
-        newRow.innerHTML += "<td id=gpr-" + item + ">0</td>"
+        newRow.innerHTML += "<td id=reg-" + item + ">0</td>"
+        
+        registers[item] = 0
     })
 
     emu_data.instructions1B.forEach(function (item) {
@@ -62,6 +70,7 @@ function documentSetup() {
 
 function changeRunState(CPUisRunning) {
     if (CPUisRunning) {
+        buttonReset.disabled = true;
         buttonStop.disabled = false;
         buttonRun.disabled = true;
         buttonStep.disabled = true;
@@ -71,6 +80,7 @@ function changeRunState(CPUisRunning) {
             input_list[i].disabled = true;
         }
     } else {
+        buttonReset.disabled = false;
         buttonStop.disabled = true;
         buttonRun.disabled = false;
         buttonStep.disabled = false;
@@ -83,6 +93,7 @@ function changeRunState(CPUisRunning) {
 }
 
 /* Button Event Handlers */
+const buttonReset = document.getElementById("button-reset");
 const buttonStop = document.getElementById("button-stop");
 const buttonRun  = document.getElementById("button-run");
 const buttonStep = document.getElementById("button-step");
@@ -90,25 +101,33 @@ const buttonSave = document.getElementById("button-save");
 const buttonLoad = document.getElementById("button-load");
 const fileInput  = document.getElementById("file-load");
 
+buttonReset.addEventListener("click", (event) => {
+    if (initialState.length == emu_data.memSize) {
+        for (let i = 0; i < emu_data.memSize; i++) {
+            setMemory(i, initialState[i])
+        }
+    }
+});
+
 buttonStop.addEventListener("click", (event) => {
-    changeRunState(false)
+    changeRunState(false);
 });
 
 buttonRun.addEventListener("click", (event) => {
-    changeRunState(true)
+    changeRunState(true);
+    cpuRunner(false);
 });
 
 buttonStep.addEventListener("click", (event) => {
+    changeRunState(true);
+    cpuRunner(true);
+    changeRunState(false);
 });
 
 buttonSave.addEventListener("click", (event) => {
     // Get all memory values as array
-    var memory_export = [];
-    for (let i = 0; i < emu_data.memSize; i++) {
-       memory_export.push(getMemory(i)); 
-    }
-
-    const blob = new Blob([JSON.stringify(memory_export)], { type: 'application/json' });
+    var memoryExport = getAllMemory();
+    const blob = new Blob([JSON.stringify(memoryExport)], { type: 'application/json' });
     const dl_url = URL.createObjectURL(blob);
     download(dl_url, 'memory.json')
 });
@@ -117,9 +136,7 @@ buttonLoad.addEventListener("click", (event) => {
     const selectedFile = document.getElementById("file-load").files[0];
     selectedFile.text().then(json => {
         // Read json file into memory
-        console.log(json)
         data = JSON.parse(json)
-        console.log(data)
         for (let i = 0; i < emu_data.memSize; i++) {
             setMemory(i, data[i])
         }
@@ -163,6 +180,15 @@ function setMemory(addr, value) {
     document.getElementById(memToId(addr)).value = value.toString(16).padStart(2, '0');
 }
 
+function getAllMemory() {
+    var memoryArray= [];
+    for (let i = 0; i < emu_data.memSize; i++) {
+       memoryArray.push(getMemory(i)); 
+    }
+
+    return memoryArray;
+}
+
 function memToId(addr) {
     return "mem" + addr.toString(16).padStart(2, '0');
 }
@@ -191,7 +217,6 @@ function ringBell() {
     bell.classList.remove("invisible")
 
     setTimeout(function() {
-        console.log("timeout done");
         bell.classList.add("invisible");
       }, 3000); // TODO change to something that works with clock speed!
 }
@@ -230,14 +255,76 @@ function updateCycleIndicator(state) {
     }
 }
 
+function getRegister(reg) {
+    return registers[reg]
+}
+
+function setRegister(reg, value) {
+    registers[reg] = value
+    document.getElementById("reg-" + reg).innerHTML = value.toString()
+}
+
 /*************
  * EMULATOR  *
  *************/
-const cpuStates = [ "FETCH", "INCREMENT", "EXECUTE" ]
-var cpuState = 0 // index of above
+function cpuRunner(isStep) {
+    // If IP == 0, store memory state before starting, so it can be reset
+    if (getRegister("IP") == 0) {
+        initialState = getAllMemory();
+    }
 
-function cpuCycle() {
-    // Perform a step of the CPU cycle
-    cpuState = (cpuState + 1) % 3
-    updateCycleIndicator(cpuStates[cpuState])
+    // Run a step of CPU
+    if (isStep) {
+        cpuStep();
+    } else {
+        halt = false;
+        while (!halt) {
+            halt = cpuStep();
+        }
+    }
+}
+
+/* Perform a step of the CPU cycle */
+function cpuStep() {
+    console.log("Step")
+    console.log(cpuState)
+    // Run step
+    isHalt = false;
+    switch(cpuStates[cpuState]) {
+        case "FETCH": 
+            cpuFetch();
+            break;
+        case "INCREMENT":
+            cpuIncrement();
+            break;
+        case "EXECUTE":
+            isHalt = cpuExecute();
+            break;
+    }
+
+    // Timeout delay for step
+    setTimeout(function() {
+    }, clockDelay); 
+
+    // Update and display next state
+    cpuState = (cpuState + 1) % 3;
+    updateCycleIndicator(cpuStates[cpuState]);
+
+    return isHalt;
+}
+
+function cpuFetch() {
+    // Copy instruction at IP to instruction store
+    setRegister("IS", getMemory(getRegister("IP")));
+}
+
+function cpuIncrement() {
+    // Increment Instruction Pointer
+    setRegister("IP", getRegister("IP") + 1)
+}
+
+function cpuExecute() {
+    // Execute instruction in IS
+
+    return false; // Return true if instruction is 'halt'
 }
