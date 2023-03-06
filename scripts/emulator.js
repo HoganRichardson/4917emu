@@ -9,6 +9,7 @@ const clockDelay = 1000 // Time in ms for each CPU step
 var cpuState = 0 // index of cpuStates array
 var initialState = [] // Stores initial state of memory before execution, restored by 'reset'
 var registers = { } 
+var stopFlag = false // Set to true when stop command issued
 
 /****************
  * FRONT END UI *
@@ -92,7 +93,6 @@ function changeRunState(CPUisRunning) {
     }
 }
 
-/* Button Event Handlers */
 const buttonReset = document.getElementById("button-reset");
 const buttonStop = document.getElementById("button-stop");
 const buttonRun  = document.getElementById("button-run");
@@ -100,28 +100,39 @@ const buttonStep = document.getElementById("button-step");
 const buttonSave = document.getElementById("button-save");
 const buttonLoad = document.getElementById("button-load");
 const fileInput  = document.getElementById("file-load");
+const printer = document.getElementById("printer");
 
+/* Button Event Handlers */
 buttonReset.addEventListener("click", (event) => {
+    // Restore memory
     if (initialState.length == emu_data.memSize) {
         for (let i = 0; i < emu_data.memSize; i++) {
             setMemory(i, initialState[i])
         }
     }
+
+    // Reset all registers
+    for (var key in registers) {
+        setRegister(key, 0);
+    }
+
+    cpuState = 0;
+    updateCycleIndicator(cpuStates[cpuState]);
+
+    clearPrinter();
 });
 
 buttonStop.addEventListener("click", (event) => {
-    changeRunState(false);
+    stopFlag = true;
+    buttonStop.disabled = true; 
 });
 
 buttonRun.addEventListener("click", (event) => {
-    changeRunState(true);
     cpuRunner(false);
 });
 
 buttonStep.addEventListener("click", (event) => {
-    changeRunState(true);
     cpuRunner(true);
-    changeRunState(false);
 });
 
 buttonSave.addEventListener("click", (event) => {
@@ -218,16 +229,20 @@ function ringBell() {
 
     setTimeout(function() {
         bell.classList.add("invisible");
-      }, 3000); // TODO change to something that works with clock speed!
+    }, 3000); // TODO change to something that works with clock speed!
 }
 
 function writeToPrinter(text) {
-    const printer = document.getElementById("printer");
     if (printer.value.length != 0) {
         // Not the first line so add linebreak
         printer.value += "\n";
     }
     printer.value += text;
+    printer.scrollTop = printer.scrollHeight;
+}
+
+function clearPrinter() {
+    printer.value = "";
     printer.scrollTop = printer.scrollHeight;
 }
 
@@ -267,7 +282,13 @@ function setRegister(reg, value) {
 /*************
  * EMULATOR  *
  *************/
-function cpuRunner(isStep) {
+function sleep (ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function cpuRunner(isStep) {
+    changeRunState(true);
+
     // If IP == 0, store memory state before starting, so it can be reset
     if (getRegister("IP") == 0) {
         initialState = getAllMemory();
@@ -278,16 +299,19 @@ function cpuRunner(isStep) {
         cpuStep();
     } else {
         halt = false;
-        while (!halt) {
+        while (!halt && !stopFlag) {
             halt = cpuStep();
+            await sleep(clockDelay);
         }
     }
+
+    stopFlag = false;
+    // Set state of CPU to stopped
+    changeRunState(false);
 }
 
 /* Perform a step of the CPU cycle */
 function cpuStep() {
-    console.log("Step")
-    console.log(cpuState)
     // Run step
     isHalt = false;
     switch(cpuStates[cpuState]) {
@@ -301,10 +325,6 @@ function cpuStep() {
             isHalt = cpuExecute();
             break;
     }
-
-    // Timeout delay for step
-    setTimeout(function() {
-    }, clockDelay); 
 
     // Update and display next state
     cpuState = (cpuState + 1) % 3;
@@ -325,6 +345,63 @@ function cpuIncrement() {
 
 function cpuExecute() {
     // Execute instruction in IS
+    var inst = getRegister("IS");
 
-    return false; // Return true if instruction is 'halt'
+    // TODO first switch based on emulator name
+    // Currently only 4917 implemented
+    switch (inst) {
+        case 0:
+            i4917_0();
+            break;
+        case 7:
+            i4917_7();
+            break;
+    }
+
+    // Return true if instruction is 'halt'
+    if (inst == 0) {
+        return true; 
+    } else {
+        return false;
+    }
 }
+
+/*** 4917 Instruction Set ***/
+function i4917_0() {
+    // Halt
+    writeToPrinter("Halt!");
+} 
+function i4917_1() {
+} 
+function i4917_2() {
+} 
+function i4917_3() {
+} 
+function i4917_4() {
+} 
+function i4917_5() {
+} 
+function i4917_6() {
+} 
+
+function i4917_7() {
+    // Ring bell
+    ringBell();
+} 
+
+function i4917_8() {
+} 
+function i4917_9() {
+} 
+function i4917_10() {
+} 
+function i4917_11() {
+} 
+function i4917_12() {
+} 
+function i4917_13() {
+} 
+function i4917_14() {
+} 
+function i4917_15() {
+} 
