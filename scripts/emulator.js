@@ -6,6 +6,7 @@
 var emu_data = null;
 const cpuStates = [ "FETCH", "INCREMENT", "EXECUTE" ]
 const clockDelay = 1000 // Time in ms for each CPU step
+const bellDelay = clockDelay * 3 // Bell timeout
 var cpuState = 0 // index of cpuStates array
 var initialState = [] // Stores initial state of memory before execution, restored by 'reset'
 var registers = { } 
@@ -229,7 +230,7 @@ function ringBell() {
 
     setTimeout(function() {
         bell.classList.add("invisible");
-    }, 3000); // TODO change to something that works with clock speed!
+    }, bellDelay); 
 }
 
 function writeToPrinter(text) {
@@ -275,8 +276,13 @@ function getRegister(reg) {
 }
 
 function setRegister(reg, value) {
-    registers[reg] = value
-    document.getElementById("reg-" + reg).innerHTML = value.toString()
+    // Enforce unsigned int with max bitness
+    while (value < 0) { 
+        value += Math.pow(2, emu_data.bits);
+    }
+    registers[reg] = value % Math.pow(2, emu_data.bits);
+
+    document.getElementById("reg-" + reg).innerHTML = registers[reg]
 }
 
 /*************
@@ -347,14 +353,10 @@ function cpuExecute() {
     // Execute instruction in IS
     var inst = getRegister("IS");
 
-    // TODO first switch based on emulator name
-    // Currently only 4917 implemented
-    switch (inst) {
-        case 0:
-            i4917_0();
-            break;
-        case 7:
-            i4917_7();
+    // Parse instruction based on emulator type
+    switch(emu_data.name) {
+        case "4917":
+            instruction4917(inst);
             break;
     }
 
@@ -367,41 +369,67 @@ function cpuExecute() {
 }
 
 /*** 4917 Instruction Set ***/
-function i4917_0() {
-    // Halt
-    writeToPrinter("Halt!");
-} 
-function i4917_1() {
-} 
-function i4917_2() {
-} 
-function i4917_3() {
-} 
-function i4917_4() {
-} 
-function i4917_5() {
-} 
-function i4917_6() {
-} 
+function instruction4917(inst) {
+    switch (inst) {
+        case 0:
+            // Halt
+            writeToPrinter("Halt!");
+            break;
 
-function i4917_7() {
-    // Ring bell
-    ringBell();
-} 
+        case 1:
+            // R0 = R0 + R1
+            var r0 = getRegister("R0");
+            var r1 = getRegister("R1");
+            setRegister("R0", r0 + r1);
+            break;
 
-function i4917_8() {
-} 
-function i4917_9() {
-} 
-function i4917_10() {
-} 
-function i4917_11() {
-} 
-function i4917_12() {
-} 
-function i4917_13() {
-} 
-function i4917_14() {
-} 
-function i4917_15() {
-} 
+        case 2:
+            // R0 = R0 - R1
+            var r0 = getRegister("R0");
+            var r1 = getRegister("R1");
+            setRegister("R0", r0 - r1);
+            break;
+
+        case 3:
+            // R0 = R0 + 1
+            setRegister("R0", getRegister("R0") + 1);
+            break;
+
+        case 4:
+            // R1 = R1 + 1
+            setRegister("R1", getRegister("R1") + 1);
+            break;
+
+        case 5:
+            // R0 = R0 - 1
+            setRegister("R0", getRegister("R0") - 1);
+            break;
+
+        case 6:
+            // R1 = R1 - 1
+            setRegister("R1", getRegister("R1") - 1);
+            break;
+
+        case 7:
+            // Ring bell
+            ringBell();
+            break;
+
+        case 8:
+            break;
+        case 9:
+            break;
+        case 10:
+            break;
+        case 11:
+            break;
+        case 12:
+            break;
+        case 13:
+            break;
+        case 14:
+            break;
+        case 15:
+            break;
+    }
+}
