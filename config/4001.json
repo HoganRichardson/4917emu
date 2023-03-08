@@ -4,12 +4,13 @@
     "bits": 4, 
     "sysRegisters": [ "IP", "IS" ],
     "gpRegisters": [ "R" ],
-    "instructions": [
+    "instructions1B": [
         [ 0, "Halt",    "Stop the Program" ],
         [ 1, "R=R+1",   "Increase R by 1" ],
         [ 2, "R=R+2",   "Increase R by 2" ],
         [ 3, "R=R+3",   "Increase R by 3" ],
         [ 4, "R=R+4",   "Increase R by 4" ],
         [ 7, "Print R", "Print the contents of R" ]
-    ]
+    ],
+    "instructions2B": []
 }

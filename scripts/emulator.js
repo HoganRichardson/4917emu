@@ -363,6 +363,9 @@ function cpuExecute() {
 
     // Parse instruction based on emulator type
     switch(emu_data.name) {
+        case "4001":
+            instruction4001(inst);
+            break;
         case "4917":
             instruction4917(inst);
             break;
@@ -373,6 +376,41 @@ function cpuExecute() {
         return true; 
     } else {
         return false;
+    }
+}
+
+/*** 4001 Instruction Set ***/
+function instruction4001(inst) {
+    switch (inst) {
+        case 0:
+            // Halt
+            writeToPrinter("Halt!");
+            break;
+
+        case 1:
+            // R = R + 1
+            setRegister("R", getRegister("R") + 1);
+            break;
+
+        case 2:
+            // R = R + 2
+            setRegister("R", getRegister("R") + 2);
+            break;
+
+        case 3:
+            // R = R + 3
+            setRegister("R", getRegister("R") + 3);
+            break;
+
+        case 4:
+            // R = R + 4
+            setRegister("R", getRegister("R") + 4);
+            break;
+
+        case 7:
+            // Print R
+            writeToPrinter(getRegister("R"));
+            break;
     }
 }
 
