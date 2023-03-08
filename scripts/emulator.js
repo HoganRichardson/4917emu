@@ -3,13 +3,15 @@
  *
  */
 
+const CPUSTATES = [ "FETCH", "INCREMENT", "EXECUTE" ]
+const CLOCKDELAY = 1000 // Time in ms for each CPU step
+const BELLDELAY = CLOCKDELAY * 3 // Bell timeout
+const INST2BSTART = 8;
 var emu_data = null;
-const cpuStates = [ "FETCH", "INCREMENT", "EXECUTE" ]
-const clockDelay = 1000 // Time in ms for each CPU step
-const bellDelay = clockDelay * 3 // Bell timeout
-var cpuState = 0 // index of cpuStates array
+var cpuState = 0 // index of CPUSTATES array
 var initialState = [] // Stores initial state of memory before execution, restored by 'reset'
-var registers = { } 
+var registers = { }
+var data = null // The 'data' for 2-byte instructions
 var stopFlag = false // Set to true when stop command issued
 
 /****************
@@ -55,7 +57,7 @@ function documentSetup() {
         var cell0 = newRow.insertCell();
         var cell1 = newRow.insertCell();
         var cell2 = newRow.insertCell();
-        cell0.innerHTML = item[0]
+        cell0.innerHTML = item[0].toString(16);
         cell1.innerHTML = "<code>" + item[1] + "</code>"
         cell2.innerHTML = item[2]
     })
@@ -64,7 +66,7 @@ function documentSetup() {
         var cell0 = newRow.insertCell();
         var cell1 = newRow.insertCell();
         var cell2 = newRow.insertCell();
-        cell0.innerHTML = item[0]
+        cell0.innerHTML = item[0].toString(16);
         cell1.innerHTML = "<code>" + item[1] + "</code>"
         cell2.innerHTML = item[2]
     })
@@ -118,7 +120,7 @@ buttonReset.addEventListener("click", (event) => {
     }
 
     cpuState = 0;
-    updateCycleIndicator(cpuStates[cpuState]);
+    updateCycleIndicator(CPUSTATES[cpuState]);
 
     clearPrinter();
 });
@@ -230,7 +232,7 @@ function ringBell() {
 
     setTimeout(function() {
         bell.classList.add("invisible");
-    }, bellDelay); 
+    }, BELLDELAY); 
 }
 
 function writeToPrinter(text) {
@@ -282,7 +284,7 @@ function setRegister(reg, value) {
     }
     registers[reg] = value % Math.pow(2, emu_data.bits);
 
-    document.getElementById("reg-" + reg).innerHTML = registers[reg]
+    document.getElementById("reg-" + reg).innerHTML = registers[reg].toString(16);
 }
 
 /*************
@@ -307,7 +309,7 @@ async function cpuRunner(isStep) {
         halt = false;
         while (!halt && !stopFlag) {
             halt = cpuStep();
-            await sleep(clockDelay);
+            await sleep(CLOCKDELAY);
         }
     }
 
@@ -320,7 +322,7 @@ async function cpuRunner(isStep) {
 function cpuStep() {
     // Run step
     isHalt = false;
-    switch(cpuStates[cpuState]) {
+    switch(CPUSTATES[cpuState]) {
         case "FETCH": 
             cpuFetch();
             break;
@@ -334,19 +336,25 @@ function cpuStep() {
 
     // Update and display next state
     cpuState = (cpuState + 1) % 3;
-    updateCycleIndicator(cpuStates[cpuState]);
+    updateCycleIndicator(CPUSTATES[cpuState]);
 
     return isHalt;
 }
 
 function cpuFetch() {
     // Copy instruction at IP to instruction store
-    setRegister("IS", getMemory(getRegister("IP")));
+    var ip = getRegister("IP");
+    setRegister("IS", getMemory(ip));
+    data = getMemory(ip + 1);
 }
 
 function cpuIncrement() {
     // Increment Instruction Pointer
-    setRegister("IP", getRegister("IP") + 1)
+    var increment = 1;
+    if (getRegister("IS") >= INST2BSTART) {
+        increment = 2;
+    }
+    setRegister("IP", getRegister("IP") + increment);
 }
 
 function cpuExecute() {
@@ -415,21 +423,50 @@ function instruction4917(inst) {
             ringBell();
             break;
 
+        // 2-byte instructions
+        // Data is stored in the 'data' global variable
         case 8:
+            // Print 'data'
+            writeToPrinter(data);
             break;
+
         case 9:
+            // Load 'data' into R0
+            setRegister("R0", data);
             break;
+
         case 10:
+            // Load 'data' into R1
+            setRegister("R1", data);
             break;
+
         case 11:
+            // Store R0 at 'data'
+            setMemory(data, getRegister("R0"));
             break;
+
         case 12:
+            // Store R1 at 'data'
+            setMemory(data, getRegister("R1"));
             break;
+
         case 13:
+            // Jump to 'data'
+            setRegister("IP", data);
             break;
+
         case 14:
+            // Jump to 'data' if R0 = 0
+            if(getRegister("R0") == 0) {
+                setRegister("IP", data);
+            }
             break;
+
         case 15:
+            // Jump to 'data' if R0 != 0
+            if(getRegister("R0") != 0) {
+                setRegister("IP", data);
+            }
             break;
     }
 }
