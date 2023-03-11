@@ -52,6 +52,8 @@ function documentSetup() {
         registers[item] = 0
     })
 
+    // TODO add memory cells dynamically!
+
     emu_data.instructions1B.forEach(function (item) {
         var newRow = document.getElementById("1binstructions").insertRow();
         var cell0 = newRow.insertCell();

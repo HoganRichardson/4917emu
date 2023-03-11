@@ -1,0 +1,27 @@
+{
+    "name": "4004",
+    "memSize": 16,
+    "bits": 4, 
+    "sysRegisters": [ "IP", "IS" ],
+    "gpRegisters": [ "R0", "R1" ],
+    "instructions1B": [
+        [ 0, "Halt",    "Stop the Program" ],
+        [ 1, "R0 = R0 + 1", "Increment R0" ],
+        [ 2, "R0 = R0 - 1", "Decrement R0" ],
+        [ 3, "R1 = R1 + 1", "Increment R1" ],
+        [ 4, "R1 = R1 - 1", "Decrement R1" ],
+        [ 5, "R0 = R0 + R1", "Add"],
+        [ 6, "R0 = R0 - R1", "Subtract"],
+        [ 7, "Print R0",    "Print the contents of R0" ]
+    ],
+    "instructions2B": [
+        [ 8, "Jump to 'data' if !0",    "Only jump to 'data' if R0 != 0" ],
+        [ 9, "Jump to 'data' if 0",     "Only jump to 'data' if R0 == 0" ],
+        [ 10, "Load 'data' into R0",    "Loads value at address 'data' into R0" ],
+        [ 11, "Load 'data' into R1",    "Loads value at address 'data' into R1" ],
+        [ 12, "Store R0 at 'data'",     "Stores R0 value at address 'data'" ],
+        [ 13, "Store R1 at 'data'",     "Stores R1 value at address 'data'" ],
+        [ 14, "R0 <=> 'data'",          "Swap R0 with 'data'"],
+        [ 15, "R1 <=> 'data'",          "Swap R1 with 'data'"]
+    ]
+}

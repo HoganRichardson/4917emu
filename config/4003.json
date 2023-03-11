@@ -1,0 +1,21 @@
+{
+    "name": "4003",
+    "memSize": 16,
+    "bits": 4, 
+    "sysRegisters": [ "IP", "IS" ],
+    "gpRegisters": [ "R0", "R1" ],
+    "instructions1B": [
+        [ 0, "Halt",    "Stop the Program" ],
+        [ 1, "R0 = R0 + 1", "Increment R0" ],
+        [ 2, "R0 = R0 - 1", "Decrement R0" ],
+        [ 3, "R1 = R1 + 1", "Increment R1" ],
+        [ 4, "R1 = R1 - 1", "Decrement R1" ],
+        [ 5, "R0 <=> R1",   "Swap R0 and R1"],
+        [ 6, "Ring Bell",   "Ding!" ],
+        [ 7, "Print R0",    "Print the contents of R0" ]
+    ],
+    "instructions2B": [
+        [ 8, "Jump to 'data' if !0",    "Only jump to 'data' if R0 != 0" ],
+        [ 9, "Jump to 'data' if 0",     "Only jump to 'data' if R0 == 0" ]
+    ]
+}
