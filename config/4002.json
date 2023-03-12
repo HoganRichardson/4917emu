@@ -6,8 +6,8 @@
     "gpRegisters": [ "R" ],
     "instructions1B": [
         [ 0, "Halt",    "Stop the Program" ],
-        [ 1, "R=R+1",   "Increment R" ],
-        [ 2, "R=R-1",   "Decrement R" ],
+        [ 1, "R = R + 1",   "Increment R" ],
+        [ 2, "R = R - 1",   "Decrement R" ],
         [ 7, "Print R", "Print the contents of R" ]
     ],
     "instructions2B": []

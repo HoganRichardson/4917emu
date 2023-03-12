@@ -53,13 +53,39 @@ function documentSetup() {
     })
 
     // TODO add memory cells dynamically!
+    for (var i = 0; i < Math.sqrt(emu_data.memSize); i++) {
+        var newRow = document.createElement("div");
+        newRow.classList.add("row");
+        newRow.classList.add("mb-3");
+
+        for (var j = 0; j < Math.sqrt(emu_data.memSize); j++) {
+            var currAddr = Math.sqrt(emu_data.memSize) * i + j;
+
+            var newCol= document.createElement("div");
+            newCol.classList.add("col");
+            newRow.appendChild(newCol);
+
+            var formText = document.createElement("div");
+            formText.classList.add("form-text");
+            formText.innerHTML = currAddr.toString(16).padStart(2, '0');
+            newCol.appendChild(formText);
+
+            var input = document.createElement("input");
+            input.id = "mem" + currAddr.toString(16).padStart(2, '0')
+            input.type = "text"
+            input.classList.add("form-control")
+            input.value = "00"
+            newCol.appendChild(input);
+        }
+        document.getElementById("mp-grid").appendChild(newRow);
+    }
 
     emu_data.instructions1B.forEach(function (item) {
         var newRow = document.getElementById("1binstructions").insertRow();
         var cell0 = newRow.insertCell();
         var cell1 = newRow.insertCell();
         var cell2 = newRow.insertCell();
-        cell0.innerHTML = item[0].toString(16);
+        cell0.innerHTML = item[0].toString(16).padStart(2, '0');
         cell1.innerHTML = "<code>" + item[1] + "</code>"
         cell2.innerHTML = item[2]
     })
@@ -68,7 +94,7 @@ function documentSetup() {
         var cell0 = newRow.insertCell();
         var cell1 = newRow.insertCell();
         var cell2 = newRow.insertCell();
-        cell0.innerHTML = item[0].toString(16);
+        cell0.innerHTML = item[0].toString(16).padStart(2, '0');
         cell1.innerHTML = "<code>" + item[1] + "</code>"
         cell2.innerHTML = item[2]
     })
@@ -228,24 +254,6 @@ function validateAllMemory() {
     }
 }
 
-function ringBell() {
-    var bell = document.getElementById("bell");
-    bell.classList.remove("invisible")
-
-    setTimeout(function() {
-        bell.classList.add("invisible");
-    }, BELLDELAY); 
-}
-
-function writeToPrinter(text) {
-    if (printer.value.length != 0) {
-        // Not the first line so add linebreak
-        printer.value += "\n";
-    }
-    printer.value += text;
-    printer.scrollTop = printer.scrollHeight;
-}
-
 function clearPrinter() {
     printer.value = "";
     printer.scrollTop = printer.scrollHeight;
@@ -363,10 +371,28 @@ function cpuExecute() {
     // Execute instruction in IS
     var inst = getRegister("IS");
 
+    // Check if halt instruction
+    if (inst == 0) {
+        writeToPrinter("\nHalt!")
+        return true; 
+    }
+
     // Parse instruction based on emulator type
     switch(emu_data.name) {
         case "4001":
             instruction4001(inst);
+            break;
+        case "4002":
+            instruction4002(inst);
+            break;
+        case "4003":
+            instruction4003(inst);
+            break;
+        case "4004":
+            instruction4004(inst);
+            break;
+        case "8008":
+            instruction8008(inst);
             break;
         case "4917":
             instruction4917(inst);
@@ -374,21 +400,77 @@ function cpuExecute() {
     }
 
     // Return true if instruction is 'halt'
-    if (inst == 0) {
-        return true; 
-    } else {
-        return false;
+    return false;
+}
+
+/*** INSTRUCTION PRIMATIVES ***/
+/*   Most instructions call one of these functions */
+function writeToPrinter(text) {
+    printer.value += text;
+    printer.scrollTop = printer.scrollHeight;
+}
+
+function writeAsciiToPrinter(charCode) {
+    printer.value += String.fromCharCode(charCode);
+}
+
+function ringBell() {
+    var bell = document.getElementById("bell");
+    bell.classList.remove("invisible")
+
+    setTimeout(function() {
+        bell.classList.add("invisible");
+    }, BELLDELAY); 
+}
+
+
+function instrAddRegs(r1, r2) {
+    setRegister(r1, getRegister(r1) + getRegister(r2));
+}
+
+function instrSubtractRegs(r1, r2) {
+    setRegister(r1, getRegister(r1) - getRegister(r2));
+}
+
+function instrIncrementReg(r) {
+    setRegister(r, getRegister(r) + 1);
+}
+
+function instrDecrementReg(r) {
+    setRegister(r, getRegister(r) - 1);
+}
+
+function instrSwapRegs(r1, r2) {
+    var r1copy = getRegister(r1);
+    setRegister(r1, getRegister(r2));
+    setRegister(r2, r1copy);
+}
+
+function instrSwapRegData(r) {
+    var rcopy = getRegister(r);
+    setRegister(r, data);
+    setMemory(data, rcopy);
+}
+
+function instrJump() {
+    setRegister("IP", data);
+}
+
+function instrJumpIfZ(r) {
+    if (getRegister(r) == 0) {
+        setRegister("IP", data);
+    }
+}
+
+function instrJumpIfnotZ(r) {
+    if(getRegister(r) != 0) {
+        setRegister("IP", data);
     }
 }
 
 /*** 4001 Instruction Set ***/
 function instruction4001(inst) {
     switch (inst) {
-        case 0:
-            // Halt
-            writeToPrinter("Halt!");
-            break;
-
         case 1:
             // R = R + 1
             setRegister("R", getRegister("R") + 1);
@@ -416,46 +498,232 @@ function instruction4001(inst) {
     }
 }
 
+/*** 4002 Instruction Set ***/
+function instruction4002(inst) {
+    switch (inst) {
+        case 1:
+            instrIncrementReg("R");
+            break;
+
+        case 2:
+            instrDecrementReg("R");
+            break;
+
+        case 7:
+            writeToPrinter(getRegister("R"));
+            break;
+    }
+}
+
+/*** 4003 Instruction Set ***/
+function instruction4003(inst) {
+    switch (inst) {
+        case 1:
+            instrIncrementReg("R0");
+            break;
+
+        case 2:
+            instrDecrementReg("R0");
+            break;
+
+        case 3:
+            instrIncrementReg("R1");
+            break;
+
+        case 4:
+            instrDecrementReg("R1");
+            break;
+        
+        case 5:
+            instrSwapRegs("R0", "R1");
+            break;
+        
+        case 6:
+            ringBell();
+            break;
+        
+        case 7:
+            writeToPrinter(getRegister("R0"));
+            break;
+
+        case 8:
+            instrJumpIfnotZ("R0");
+            break;
+
+        case 9:
+            instrJumpIfZ("R0");
+            break;
+    }
+}
+/*** 4004 Instruction Set ***/
+function instruction4004(inst) {
+    switch (inst) {
+        case 1:
+            instrIncrementReg("R0");
+            break;
+
+        case 2:
+            instrDecrementReg("R0");
+            break;
+
+        case 3:
+            instrIncrementReg("R1");
+            break;
+
+        case 4:
+            instrDecrementReg("R1");
+            break;
+        
+        case 5:
+            instrAddRegs("R0", "R1");
+            break;
+        
+        case 6:
+            instrSubtractRegs("R0", "R1");
+            break;
+        
+        case 7:
+            writeToPrinter(getRegister("R0"));
+            break;
+
+        case 8:
+            instrJumpIfnotZ("R0");
+            break;
+
+        case 9:
+            instrJumpIfZ("R0");
+            break;
+
+        case 10:
+            setRegister("R0", data);
+            break;
+
+        case 11:
+            setRegister("R1", data);
+            break;
+
+        case 12:
+            setMemory(data, getRegister("R0"));
+            break;
+
+        case 13:
+            setMemory(data, getRegister("R1"));
+            break;
+        
+        case 14:
+            instrSwapRegData("R0");
+            break;
+
+        case 15:
+            instrSwapRegData("R1");
+            break;
+    }
+}
+
+/*** 8008 Instruction Set ***/
+function instruction8008(inst) {
+    switch (inst) {
+        case 1:
+            instrIncrementReg("R0");
+            break;
+
+        case 2:
+            instrDecrementReg("R0");
+            break;
+
+        case 3:
+            instrIncrementReg("R1");
+            break;
+
+        case 4:
+            instrDecrementReg("R1");
+            break;
+        
+        case 5:
+            instrAddRegs("R0", "R1");
+            break;
+        
+        case 6:
+            instrSubtractRegs("R0", "R1");
+            break;
+        
+        case 7:
+            writeToPrinter(getRegister("R0"));
+            break;
+
+        case 8:
+            instrJumpIfnotZ("R0");
+            break;
+
+        case 9:
+            instrJumpIfZ("R0");
+            break;
+
+        case 10:
+            setRegister("R0", data);
+            break;
+
+        case 11:
+            setRegister("R1", data);
+            break;
+
+        case 12:
+            setMemory(data, getRegister("R0"));
+            break;
+
+        case 13:
+            setMemory(data, getRegister("R1"));
+            break;
+        
+        case 14:
+            instrSwapRegData("R0");
+            break;
+
+        case 15:
+            instrSwapRegData("R1");
+            break;
+        
+        case 16:
+            ringBell();
+            break;
+        
+        case 17:
+            writeAsciiToPrinter(getRegister("R0"));
+            break;
+    }
+}
+
 /*** 4917 Instruction Set ***/
 function instruction4917(inst) {
     switch (inst) {
-        case 0:
-            // Halt
-            writeToPrinter("Halt!");
-            break;
-
         case 1:
             // R0 = R0 + R1
-            var r0 = getRegister("R0");
-            var r1 = getRegister("R1");
-            setRegister("R0", r0 + r1);
+            instrAddRegs("R0", "R1");
             break;
 
         case 2:
             // R0 = R0 - R1
-            var r0 = getRegister("R0");
-            var r1 = getRegister("R1");
-            setRegister("R0", r0 - r1);
+            instrSubtractRegs("R0", "R1");
             break;
 
         case 3:
             // R0 = R0 + 1
-            setRegister("R0", getRegister("R0") + 1);
+            instrIncrementReg("R0");
             break;
 
         case 4:
             // R1 = R1 + 1
-            setRegister("R1", getRegister("R1") + 1);
+            instrIncrementReg("R1");
             break;
 
         case 5:
             // R0 = R0 - 1
-            setRegister("R0", getRegister("R0") - 1);
+            instrDecrementReg("R0");
             break;
 
         case 6:
             // R1 = R1 - 1
-            setRegister("R1", getRegister("R1") - 1);
+            instrDecrementReg("R1");
             break;
 
         case 7:
@@ -492,21 +760,17 @@ function instruction4917(inst) {
 
         case 13:
             // Jump to 'data'
-            setRegister("IP", data);
+            instrJump();
             break;
 
         case 14:
             // Jump to 'data' if R0 = 0
-            if(getRegister("R0") == 0) {
-                setRegister("IP", data);
-            }
+            instrJumpIfZ("R0")
             break;
 
         case 15:
             // Jump to 'data' if R0 != 0
-            if(getRegister("R0") != 0) {
-                setRegister("IP", data);
-            }
+            instrJumpIfnotZ("R0")
             break;
     }
 }
